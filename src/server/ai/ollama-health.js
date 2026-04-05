@@ -1,5 +1,5 @@
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
-const MODEL = process.env.OLLAMA_MODEL || 'llama3:latest';
+const MODEL = process.env.OLLAMA_MODEL || 'phi3:latest';
 
 export async function checkOllamaHealth() {
   try {

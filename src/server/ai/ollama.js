@@ -1,7 +1,7 @@
 import { query } from '../db/index.js';
 
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
-const MODEL = process.env.OLLAMA_MODEL || 'llama3:latest';
+const MODEL = process.env.OLLAMA_MODEL || 'phi3:latest';
 const EMBEDDING_MODEL = process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text';
 
 export async function chatWithOllama(prompt, imageBase64 = null) {

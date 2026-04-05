@@ -8,7 +8,7 @@ export function validateEnv(req, res, next) {
     warnings.push(`OLLAMA_HOST not set, defaulting to http://localhost:11434`);
   }
   if (!process.env.OLLAMA_MODEL) {
-    warnings.push(`OLLAMA_MODEL not set, defaulting to llama3:latest`);
+    warnings.push(`OLLAMA_MODEL not set, defaulting to phi3:latest`);
   }
 
   if (missing.length > 0) {
