@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS transactions (
     time TIME NOT NULL,
     timestamp BIGINT NOT NULL,
     image_url TEXT,
-    embedding VECTOR(768),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -29,25 +28,11 @@ CREATE TABLE IF NOT EXISTS user_balances (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Transaction embeddings table (for RAG)
-CREATE TABLE IF NOT EXISTS transaction_embeddings (
-    id SERIAL PRIMARY KEY,
-    transaction_id INTEGER REFERENCES transactions(id) ON DELETE CASCADE,
-    user_id VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    type VARCHAR(10) NOT NULL,
-    embedding VECTOR(768),
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_timestamp ON transactions(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);
-CREATE INDEX IF NOT EXISTS idx_transaction_embeddings_user_id ON transaction_embeddings(user_id);
-CREATE INDEX IF NOT EXISTS idx_transaction_embeddings_embedding ON transaction_embeddings USING ivfflat (embedding vector_cosine_ops);
 
 -- Function to update user balance
 CREATE OR REPLACE FUNCTION update_user_balance()

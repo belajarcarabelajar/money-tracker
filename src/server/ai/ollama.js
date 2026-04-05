@@ -71,21 +71,8 @@ export async function getEmbedding(text) {
 }
 
 export async function findSimilarTransactions(userId, queryEmbedding, limit = 10) {
-  try {
-    const result = await query(
-      `SELECT id, description, category, type, amount, date,
-              1 - (embedding <=> $2::vector) as similarity
-       FROM transaction_embeddings
-       WHERE user_id = $1
-       ORDER BY embedding <=> $2::vector
-       LIMIT $3`,
-      [userId, queryEmbedding, limit]
-    );
-    return result.rows;
-  } catch (error) {
-    console.error('Similarity search error:', error);
-    return [];
-  }
+  // pgvector not available, RAG disabled
+  return [];
 }
 
 export async function analyzeImage(imageBase64) {
