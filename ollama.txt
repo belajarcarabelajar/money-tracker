@@ -1,0 +1,686 @@
+text: gemma4:31b-cloud
+embedding record: nomic-embed-text:latest
+
+Ollama is available on macOS, Windows, and Linux. [Download Ollama](https://ollama.com/download)
+
+## Get Started
+
+Run `ollama` in your terminal to open the interactive menu:
+
+```shellscript
+ollama
+```
+
+Navigate with `↑/↓`, press `enter` to launch, `→` to change model, and `esc` to quit. The menu provides quick access to:
+- **Run a model** - Start an interactive chat
+- **Launch tools** - Claude Code, Codex, OpenClaw, and more
+- **Additional integrations** - Available under “More…”
+
+## Assistants
+
+Launch [OpenClaw](https://docs.ollama.com/integrations/openclaw), a personal AI with 100+ skills:
+
+```shellscript
+ollama launch openclaw
+```
+
+## Coding
+
+Launch [Claude Code](https://docs.ollama.com/integrations/claude-code) and other coding tools with Ollama models:
+
+```shellscript
+ollama launch claude
+```
+
+```shellscript
+ollama launch codex
+```
+
+```shellscript
+ollama launch opencode
+```
+
+See [integrations](https://docs.ollama.com/integrations) for all supported tools.
+
+## API
+
+Use the [API](https://docs.ollama.com/api) to integrate Ollama into your applications:
+
+```shellscript
+curl http://localhost:11434/api/chat -d '{
+  "model": "gemma3",
+  "messages": [{ "role": "user", "content": "Hello!" }]
+}'
+```
+
+See the [API documentation](https://docs.ollama.com/api) for Python, JavaScript, and other integrations.
+
+## Cloud Models
+
+Ollama’s cloud models are a new kind of model in Ollama that can run without a powerful GPU. Instead, cloud models are automatically offloaded to Ollama’s cloud service while offering the same capabilities as local models, making it possible to keep using your local tools while running larger models that wouldn’t fit on a personal computer.
+
+### Supported models
+
+For a list of supported models, see Ollama’s [model library](https://ollama.com/search?c=cloud).
+
+### Running Cloud models
+
+Ollama’s cloud models require an account on [ollama.com](https://ollama.com/). To sign in or create an account, run:
+
+```text
+ollama signin
+```
+
+- CLI
+- Python
+- JavaScript
+- cURL
+
+To run a cloud model, open the terminal and run:
+
+```text
+ollama run gpt-oss:120b-cloud
+```
+
+## Cloud API access
+
+Cloud models can also be accessed directly on ollama.com’s API. In this mode, ollama.com acts as a remote Ollama host.
+
+### Authentication
+
+For direct access to ollama.com’s API, first create an [API key](https://ollama.com/settings/keys). Then, set the `OLLAMA_API_KEY` environment variable to your API key.
+
+```text
+export OLLAMA_API_KEY=your_api_key
+```
+
+### Listing models
+
+For models available directly via Ollama’s API, models can be listed via:
+
+```text
+curl https://ollama.com/api/tags
+```
+
+### Generating a response
+
+- Python
+- JavaScript
+- cURL
+
+First, install [Ollama’s Python library](https://github.com/ollama/ollama-python)
+
+```text
+pip install ollama
+```
+
+Then make a request
+
+```python
+import os
+from ollama import Client
+
+client = Client(
+    host="https://ollama.com",
+    headers={'Authorization': 'Bearer ' + os.environ.get('OLLAMA_API_KEY')}
+)
+
+messages = [
+  {
+    'role': 'user',
+    'content': 'Why is the sky blue?',
+  },
+]
+
+for part in client.chat('gpt-oss:120b', messages=messages, stream=True):
+  print(part['message']['content'], end='', flush=True)
+```
+
+## Local only
+
+Ollama can run in local-only mode by [disabling Ollama’s cloud](https://docs.ollama.com/faq#how-do-i-disable-ollama-cloud) features.
+
+Structured outputs let you enforce a JSON schema on model responses so you can reliably extract structured data, describe images, or keep every reply consistent.
+
+## Generating structured JSON
+
+```shellscript
+curl -X POST http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "gpt-oss",
+  "messages": [{"role": "user", "content": "Tell me about Canada in one line"}],
+  "stream": false,
+  "format": "json"
+}'
+```
+
+## Generating structured JSON with a schema
+
+Provide a JSON schema to the `format` field.
+
+It is ideal to also pass the JSON schema as a string in the prompt to ground the model’s response.
+
+```shellscript
+curl -X POST http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "gpt-oss",
+  "messages": [{"role": "user", "content": "Tell me about Canada."}],
+  "stream": false,
+  "format": {
+    "type": "object",
+    "properties": {
+      "name": {"type": "string"},
+      "capital": {"type": "string"},
+      "languages": {
+        "type": "array",
+        "items": {"type": "string"}
+      }
+    },
+    "required": ["name", "capital", "languages"]
+  }
+}'
+```
+
+## Example: Extract structured data
+
+Define the objects you want returned and let the model populate the fields:
+
+```python
+from ollama import chat
+from pydantic import BaseModel
+
+class Pet(BaseModel):
+  name: str
+  animal: str
+  age: int
+  color: str | None
+  favorite_toy: str | None
+
+class PetList(BaseModel):
+  pets: list[Pet]
+
+response = chat(
+  model='gpt-oss',
+  messages=[{'role': 'user', 'content': 'I have two cats named Luna and Loki...'}],
+  format=PetList.model_json_schema(),
+)
+
+pets = PetList.model_validate_json(response.message.content)
+print(pets)
+```
+
+## Example: Vision with structured outputs
+
+Vision models accept the same `format` parameter, enabling deterministic descriptions of images:
+
+```python
+from ollama import chat
+from pydantic import BaseModel
+from typing import Literal, Optional
+
+class Object(BaseModel):
+  name: str
+  confidence: float
+  attributes: str
+
+class ImageDescription(BaseModel):
+  summary: str
+  objects: list[Object]
+  scene: str
+  colors: list[str]
+  time_of_day: Literal['Morning', 'Afternoon', 'Evening', 'Night']
+  setting: Literal['Indoor', 'Outdoor', 'Unknown']
+  text_content: Optional[str] = None
+
+response = chat(
+  model='gemma3',
+  messages=[{
+    'role': 'user',
+    'content': 'Describe this photo and list the objects you detect.',
+    'images': ['path/to/image.jpg'],
+  }],
+  format=ImageDescription.model_json_schema(),
+  options={'temperature': 0},
+)
+
+image_description = ImageDescription.model_validate_json(response.message.content)
+print(image_description)
+```
+
+## Tips for reliable structured outputs
+
+- Define schemas with Pydantic (Python) or Zod (JavaScript) so they can be reused for validation.
+- Lower the temperature (e.g., set it to `0`) for more deterministic completions.
+- Structured outputs work through the OpenAI-compatible API via `response_format`
+
+Vision models accept images alongside text so the model can describe, classify, and answer questions about what it sees.
+
+## Quick start
+
+```shellscript
+ollama run gemma3 ./image.png whats in this image?
+```
+
+## Usage with Ollama’s API
+
+Provide an `images` array. SDKs accept file paths, URLs or raw bytes while the REST API expects base64-encoded image data.
+
+```shellscript
+# 1. Download a sample image
+curl -L -o test.jpg "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg"
+
+# 2. Encode the image
+IMG=$(base64 < test.jpg | tr -d '\n')
+
+# 3. Send it to Ollama
+curl -X POST http://localhost:11434/api/chat \
+-H "Content-Type: application/json" \
+-d '{
+    "model": "gemma3",
+    "messages": [{
+    "role": "user",
+    "content": "What is in this image?",
+    "images": ["'"$IMG"'"]
+    }],
+    "stream": false
+}'
+```
+
+Embeddings turn text into numeric vectors you can store in a vector database, search with cosine similarity, or use in RAG pipelines. The vector length depends on the model (typically 384–1024 dimensions).
+
+## Generate embeddings
+
+Generate embeddings directly from the command line:
+
+```shellscript
+ollama run embeddinggemma "Hello world"
+```
+
+You can also pipe text to generate embeddings:
+
+```shellscript
+echo "Hello world" | ollama run embeddinggemma
+```
+
+Output is a JSON array.
+
+The `/api/embed` endpoint returns L2‑normalized (unit‑length) vectors.
+
+## Generate a batch of embeddings
+
+Pass an array of strings to `input`.
+
+```shellscript
+curl -X POST http://localhost:11434/api/embed \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "embeddinggemma",
+    "input": [
+      "First sentence",
+      "Second sentence",
+      "Third sentence"
+    ]
+  }'
+```
+
+## Tips
+
+- Use cosine similarity for most semantic search use cases.
+- Use the same embedding model for both indexing and querying.
+
+Ollama supports tool calling (also known as function calling) which allows a model to invoke tools and incorporate their results into its replies.
+
+## Calling a single tool
+
+Invoke a single tool and include its response in a follow-up request. Also known as “single-shot” tool calling.
+
+```shellscript
+curl -s http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "qwen3",
+  "messages": [{"role": "user", "content": "What is the temperature in New York?"}],
+  "stream": false,
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_temperature",
+        "description": "Get the current temperature for a city",
+        "parameters": {
+          "type": "object",
+          "required": ["city"],
+          "properties": {
+            "city": {"type": "string", "description": "The name of the city"}
+          }
+        }
+      }
+    }
+  ]
+}'
+```
+
+**Generate a response with a single tool result**
+
+```shellscript
+curl -s http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "qwen3",
+  "messages": [
+    {"role": "user", "content": "What is the temperature in New York?"},
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "type": "function",
+          "function": {
+            "index": 0,
+            "name": "get_temperature",
+            "arguments": {"city": "New York"}
+          }
+        }
+      ]
+    },
+    {"role": "tool", "tool_name": "get_temperature", "content": "22°C"}
+  ],
+  "stream": false
+}'
+```
+
+## Parallel tool calling
+
+Request multiple tool calls in parallel, then send all tool responses back to the model.
+
+```shellscript
+curl -s http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "qwen3",
+  "messages": [{"role": "user", "content": "What are the current weather conditions and temperature in New York and London?"}],
+  "stream": false,
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_temperature",
+        "description": "Get the current temperature for a city",
+        "parameters": {
+          "type": "object",
+          "required": ["city"],
+          "properties": {
+            "city": {"type": "string", "description": "The name of the city"}
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_conditions",
+        "description": "Get the current weather conditions for a city",
+        "parameters": {
+          "type": "object",
+          "required": ["city"],
+          "properties": {
+            "city": {"type": "string", "description": "The name of the city"}
+          }
+        }
+      }
+    }
+  ]
+}'
+```
+
+**Generate a response with multiple tool results**
+
+```shellscript
+curl -s http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "qwen3",
+  "messages": [
+    {"role": "user", "content": "What are the current weather conditions and temperature in New York and London?"},
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "type": "function",
+          "function": {
+            "index": 0,
+            "name": "get_temperature",
+            "arguments": {"city": "New York"}
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "index": 1,
+            "name": "get_conditions",
+            "arguments": {"city": "New York"}
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "index": 2,
+            "name": "get_temperature",
+            "arguments": {"city": "London"}
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "index": 3,
+            "name": "get_conditions",
+            "arguments": {"city": "London"}
+          }
+        }
+      ]
+    },
+    {"role": "tool", "tool_name": "get_temperature", "content": "22°C"},
+    {"role": "tool", "tool_name": "get_conditions", "content": "Partly cloudy"},
+    {"role": "tool", "tool_name": "get_temperature", "content": "15°C"},
+    {"role": "tool", "tool_name": "get_conditions", "content": "Rainy"}
+  ],
+  "stream": false
+}'
+```
+
+## Multi-turn tool calling (Agent loop)
+
+An agent loop allows the model to decide when to invoke tools and incorporate their results into its replies. It also might help to tell the model that it is in a loop and can make multiple tool calls.
+
+```python
+from ollama import chat, ChatResponse
+
+def add(a: int, b: int) -> int:
+  """Add two numbers"""
+  """
+  Args:
+    a: The first number
+    b: The second number
+
+  Returns:
+    The sum of the two numbers
+  """
+  return a + b
+
+def multiply(a: int, b: int) -> int:
+  """Multiply two numbers"""
+  """
+  Args:
+    a: The first number
+    b: The second number
+
+  Returns:
+    The product of the two numbers
+  """
+  return a * b
+
+available_functions = {
+  'add': add,
+  'multiply': multiply,
+}
+
+messages = [{'role': 'user', 'content': 'What is (11434+12341)*412?'}]
+while True:
+    response: ChatResponse = chat(
+        model='qwen3',
+        messages=messages,
+        tools=[add, multiply],
+        think=True,
+    )
+    messages.append(response.message)
+    print("Thinking: ", response.message.thinking)
+    print("Content: ", response.message.content)
+    if response.message.tool_calls:
+        for tc in response.message.tool_calls:
+            if tc.function.name in available_functions:
+                print(f"Calling {tc.function.name} with arguments {tc.function.arguments}")
+                result = available_functions[tc.function.name](**tc.function.arguments)
+                print(f"Result: {result}")
+                # add the tool result to the messages
+                messages.append({'role': 'tool', 'tool_name': tc.function.name, 'content': str(result)})
+    else:
+        # end the loop when there are no more tool calls
+        break
+  # continue the loop with the updated messages
+```
+
+## Tool calling with streaming
+
+When streaming, gather every chunk of `thinking`, `content`, and `tool_calls`, then return those fields together with any tool results in the follow-up request.
+
+```python
+from ollama import chat 
+
+def get_temperature(city: str) -> str:
+  """Get the current temperature for a city
+  
+  Args:
+    city: The name of the city
+
+  Returns:
+    The current temperature for the city
+  """
+  temperatures = {
+    'New York': '22°C',
+    'London': '15°C',
+  }
+  return temperatures.get(city, 'Unknown')
+
+messages = [{'role': 'user', 'content': "What is the temperature in New York?"}]
+
+while True:
+  stream = chat(
+    model='qwen3',
+    messages=messages,
+    tools=[get_temperature],
+    stream=True,
+    think=True,
+  )
+
+  thinking = ''
+  content = ''
+  tool_calls = []
+
+  done_thinking = False
+  # accumulate the partial fields
+  for chunk in stream:
+    if chunk.message.thinking:
+      thinking += chunk.message.thinking
+      print(chunk.message.thinking, end='', flush=True)
+    if chunk.message.content:
+      if not done_thinking:
+        done_thinking = True
+        print('\n')
+      content += chunk.message.content
+      print(chunk.message.content, end='', flush=True)
+    if chunk.message.tool_calls:
+      tool_calls.extend(chunk.message.tool_calls)
+      print(chunk.message.tool_calls)
+
+  # append accumulated fields to the messages
+  if thinking or content or tool_calls:
+    messages.append({'role': 'assistant', 'thinking': thinking, 'content': content, 'tool_calls': tool_calls})
+
+  if not tool_calls:
+    break
+
+  for call in tool_calls:
+    if call.function.name == 'get_temperature':
+      result = get_temperature(**call.function.arguments)
+    else:
+      result = 'Unknown tool'
+    messages.append({'role': 'tool', 'tool_name': call.function.name, 'content': result})
+```
+
+This loop streams the assistant response, accumulates partial fields, passes them back together, and appends the tool results so the model can complete its answer.
+
+## Using functions as tools with Ollama Python SDK
+
+The Python SDK automatically parses functions as a tool schema so we can pass them directly. Schemas can still be passed if needed.
+
+```python
+from ollama import chat
+
+def get_temperature(city: str) -> str:
+  """Get the current temperature for a city
+  
+  Args:
+    city: The name of the city
+
+  Returns:
+    The current temperature for the city
+  """
+  temperatures = {
+    'New York': '22°C',
+    'London': '15°C',
+  }
+  return temperatures.get(city, 'Unknown')
+
+available_functions = {
+  'get_temperature': get_temperature,
+}
+# directly pass the function as part of the tools list
+response = chat(model='qwen3', messages=messages, tools=available_functions.values(), think=True)
+```
+
+Streaming allows you to render text as it is produced by the model. Streaming is enabled by default through the REST API, but disabled by default in the SDKs. To enable streaming in the SDKs, set the `stream` parameter to `True`.
+
+## Key streaming concepts
+
+1. Chatting: Stream partial assistant messages. Each chunk includes the `content` so you can render messages as they arrive.
+2. Thinking: Thinking-capable models emit a `thinking` field alongside regular content in each chunk. Detect this field in streaming chunks to show or hide reasoning traces before the final answer arrives.
+3. Tool calling: Watch for streamed `tool_calls` in each chunk, execute the requested tool, and append tool outputs back into the conversation.
+
+## Handling streamed chunks
+
+It is necessary to accumulate the partial fields in order to maintain the history of the conversation. This is particularly important for tool calling where the thinking, tool call from the model, and the executed tool result must be passed back to the model in the next request.
+
+- Python
+- JavaScript
+
+```python
+from ollama import chat
+
+stream = chat(
+  model='qwen3',
+  messages=[{'role': 'user', 'content': 'What is 17 × 23?'}],
+  stream=True,
+)
+
+in_thinking = False
+content = ''
+thinking = ''
+for chunk in stream:
+  if chunk.message.thinking:
+    if not in_thinking:
+      in_thinking = True
+      print('Thinking:\n', end='', flush=True)
+    print(chunk.message.thinking, end='', flush=True)
+    # accumulate the partial thinking 
+    thinking += chunk.message.thinking
+  elif chunk.message.content:
+    if in_thinking:
+      in_thinking = False
+      print('\n\nAnswer:\n', end='', flush=True)
+    print(chunk.message.content, end='', flush=True)
+    # accumulate the partial content
+    content += chunk.message.content
+
+  # append the accumulated fields to the messages for the next request
+  new_messages = [{ role: 'assistant', thinking: thinking, content: content }]
+```
+
