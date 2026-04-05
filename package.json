@@ -1,0 +1,26 @@
+{
+  "name": "money-tracker",
+  "version": "1.0.0",
+  "description": "Personal financial tracker with AI chatbot powered by Ollama",
+  "main": "src/server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server/index.js",
+    "dev": "node --watch src/server/index.js",
+    "migrate": "node src/server/db/migrate.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "docker-compose": "^3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

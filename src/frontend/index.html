@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pelacak Uang Pro (Red Theme)</title>
+
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body data-theme="light">
+
+    <!-- 1. Header -->
+    <header class="app-header">
+        <div class="header-top-row">
+            <div class="header-title-group">
+                <div id="connection-status" class="connection-status">
+                    <span class="status-dot connecting"></span>
+                    <span id="status-text">Menghubungkan...</span>
+                </div>
+                <h1 class="app-title">💰 Money Tracker</h1>
+                <div id="real-time-clock" class="real-time-clock">&nbsp;</div>
+            </div>
+            <div class="header-controls-group">
+                <label class="dark-mode-toggle" for="dark-mode-switch" title="Ganti Mode Gelap/Terang">
+                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <input type="checkbox" id="dark-mode-switch">
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </label>
+            </div>
+        </div>
+
+        <section class="balance-card" id="balance-card">
+            <h3>Saldo Saat Ini</h3>
+            <div id="balance-display" role="status">Rp 0</div>
+            <div class="income-expense-summary">
+                <div class="summary-item">
+                    <h4>Total Pemasukan</h4>
+                    <div id="income-display">Rp 0</div>
+                </div>
+                <div class="summary-item">
+                    <h4>Total Pengeluaran</h4>
+                    <div id="expense-display">Rp 0</div>
+                </div>
+            </div>
+        </section>
+    </header>
+
+    <!-- 2. Main Content -->
+    <main>
+        <!-- 1. FORMULIR -->
+        <section class="form-card">
+            <h2>Transaksi Baru</h2>
+            <form id="transaction-form" novalidate>
+                <div class="form-group">
+                    <label>Tipe Transaksi</label>
+                    <div class="segmented-control" role="radiogroup">
+                        <input type="radio" id="type-expense" name="type" value="Expense" checked>
+                        <label for="type-expense">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg> Expense
+                        </label>
+                        <input type="radio" id="type-income" name="type" value="Income">
+                        <label for="type-income">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg> Income
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">Jumlah</label>
+                    <div class="amount-group">
+                        <span class="amount-prefix">Rp</span>
+                        <input type="text" id="amount" class="form-control" placeholder="0" inputmode="numeric">
+                    </div>
+                    <span id="amount-error" class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Deskripsi</label>
+                    <div class="input-with-button">
+                        <input type="text" id="description" class="form-control" placeholder="Contoh: Beli Kopi Susu">
+                        <button type="button" id="auto-categorize-btn" class="ai-btn-small" title="Kategorisasi Otomatis dengan AI">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                            <span>Auto AI</span>
+                        </button>
+                    </div>
+                    <span id="description-error" class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <div id="category-grid" role="radiogroup"></div>
+                    <span id="category-error" class="error-message"></span>
+                </div>
+
+                <button type="submit" id="submit-btn">
+                    <span class="submit-btn-text">Simpan ke Cloud</span>
+                    <span class="spinner"></span>
+                </button>
+            </form>
+        </section>
+
+        <!-- 2. RIWAYAT -->
+        <section class="history-section">
+            <h2>Riwayat Transaksi</h2>
+            <ul id="transaction-list"></ul>
+            <div id="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <h3>Belum Ada Transaksi</h3>
+                <p>Data tersimpan aman di akun Google Anda.</p>
+            </div>
+            <button id="clear-data-btn">Hapus Semua Data</button>
+        </section>
+
+        <!-- 3. CHARTS SECTION -->
+        <section class="charts-section">
+            <!-- Pie/Doughnut Chart: Kategori (Dengan Toggle) -->
+            <div class="chart-card">
+                <div class="chart-header-row">
+                    <h3>Statistik Kategori</h3>
+                    <div class="chart-toggle">
+                        <!-- Toggle Buttons -->
+                        <button class="toggle-btn active" data-type="Expense" id="btn-chart-expense">Pengeluaran</button>
+                        <button class="toggle-btn" data-type="Income" id="btn-chart-income">Pemasukan</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Bar Chart: Tren Harian -->
+            <div class="chart-card">
+                <div class="chart-header-row">
+                    <h3>Tren 7 Hari Terakhir</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. BACKUP & RESTORE SECTION -->
+        <section class="backup-section">
+            <h2>Backup & Restore Data</h2>
+            <div class="backup-controls">
+                <button id="export-btn" class="backup-btn export">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Ekspor Data (.JSON)
+                </button>
+                <button id="import-btn" class="backup-btn import">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Impor Data (.JSON)
+                </button>
+                <input type="file" id="import-file" accept=".json" style="display: none;">
+            </div>
+            <p class="backup-note">Ekspor untuk mencadangkan data. Impor akan menambahkan data dari file ke akun Cloud Anda.</p>
+        </section>
+    </main>
+
+    <!-- FOOTER WATERMARK -->
+    <footer class="app-footer">
+        <p>Money Tracker ini dibuat oleh Iwan Kurniawan (Founder BCB Academy @belajarcarabelajar) menggunakan Google Gemini, produk/layanan lainnya lebih lanjut, kunjungi situs: <a href="https://belajarcarabelajar.com/" target="_blank">https://belajarcarabelajar.com/</a></p>
+    </footer>
+
+    <!-- AI Chatbot FAB -->
+    <button id="ai-fab" class="ai-fab" title="Tanya AI Advisor">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </button>
+
+    <!-- AI Chat Window -->
+    <div id="chat-window" class="chat-window">
+        <div class="chat-header">
+            <h3>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                AI Financial Advisor
+            </h3>
+            <button id="chat-close" class="chat-close"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            <div class="message bot">Halo! Saya asisten keuangan AI Anda. Saya bisa melihat struk belanja atau menjawab pertanyaan Anda. Coba lampirkan gambar!</div>
+        </div>
+
+        <div class="chat-input-area">
+            <div id="chat-image-preview" class="chat-image-preview">
+                <img id="preview-img" src="" alt="Preview">
+                <button id="remove-img" class="preview-close">X</button>
+            </div>
+
+            <div class="chat-input-container">
+                <input type="file" id="chat-file-input" accept="image/*" style="display: none;">
+                <button id="chat-attach" class="chat-attach" title="Lampirkan Gambar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                </button>
+                <button id="chat-mic" class="chat-mic" title="Input Suara">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                </button>
+                <textarea id="chat-input" class="chat-input" placeholder="Tanya atau kirim gambar..." rows="1"></textarea>
+                <button id="chat-send" class="chat-send" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="confirm-modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Hapus Semua?</h2>
+                <button class="modal-close-btn" id="confirm-modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <p style="margin-bottom: 1.5rem; color: var(--color-text-secondary);">Semua data transaksi di Cloud akan dihapus permanen.</p>
+            <div id="confirm-modal-actions">
+                <button class="modal-btn modal-btn-secondary" id="confirm-no-btn">Batal</button>
+                <button class="modal-btn modal-btn-danger" id="confirm-yes-btn">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="delete-item-modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Hapus Transaksi?</h2>
+                <button class="modal-close-btn" id="delete-item-modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <p id="delete-item-desc" style="font-weight: 600; margin-bottom: 1.5rem;"></p>
+            <div id="delete-item-modal-actions">
+                <button class="modal-btn modal-btn-secondary" id="delete-item-no-btn">Batal</button>
+                <button class="modal-btn modal-btn-danger" id="delete-item-yes-btn">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>
