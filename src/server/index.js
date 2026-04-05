@@ -7,10 +7,10 @@ import transactionsRouter from './routes/transactions.js';
 import chatRouter from './routes/chat.js';
 import backupRouter from './routes/backup.js';
 import errorHandler from './middleware/error-handler.js';
-import { validateEnv } from './middleware/env-validator.js';
+import { validateEnvSync } from './middleware/env-validator.js';
 
 dotenv.config();
-validateEnv();
+validateEnvSync();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
