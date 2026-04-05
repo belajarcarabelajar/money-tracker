@@ -6,7 +6,7 @@ Personal financial tracker dengan AI chatbot powered by Ollama.
 
 - **Backend**: Node.js + Express
 - **Database**: PostgreSQL 18.3
-- **AI**: Ollama (gemma4:31b-cloud + nomic-embed-text)
+- **AI**: Ollama (llama3:latest + nomic-embed-text)
 - **Frontend**: Vanilla JS (modular)
 
 ## Features
@@ -43,7 +43,7 @@ cp .env.example .env
 docker-compose up -d postgres ollama
 
 # Pull Ollama models
-docker exec moneytracker_ollama ollama pull gemma4:31b-cloud
+docker exec moneytracker_ollama ollama pull llama3:latest
 docker exec moneytracker_ollama ollama pull nomic-embed-text
 
 # Run migrations (optional - docker-compose auto-migrates)
@@ -132,7 +132,7 @@ nano .env  # Set secure passwords
 
 # Pull Ollama models
 docker-compose up -d ollama
-docker exec moneytracker_ollama ollama pull gemma4:31b-cloud
+docker exec moneytracker_ollama ollama pull llama3:latest
 docker exec moneytracker_ollama ollama pull nomic-embed-text
 
 # Build & start
@@ -159,7 +159,7 @@ DB_USER=postgres
 DB_PASSWORD=your_secure_password
 PORT=3000
 OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODEL=gemma4:31b-cloud
+OLLAMA_MODEL=llama3:latest
 OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 ```
 
