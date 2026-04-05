@@ -85,6 +85,31 @@ Buka http://localhost:3000
 
 ## Deployment (VPS)
 
+### Standard Workflow: GitHub → VPS Sync
+
+```bash
+# Local: Commit & push to GitHub
+git add .
+git commit -m "fix: describe changes"
+git push origin main
+
+# VPS: Pull from GitHub
+cd /app/money-tracker
+git pull origin main
+
+# VPS: Restart services
+docker-compose down && docker-compose up -d --build
+```
+
+### Manual Deployment (no git on VPS)
+
+```bash
+# Local: rsync to VPS
+rsync -avz --exclude='.git' --exclude='node_modules' \
+  -e "ssh -i ~/.ssh/your-key.pem" \
+  ./ user@57.158.24.135:/app/money-tracker/
+```
+
 ### 1. Server Requirements
 
 - Ubuntu 20.04+ / Debian 11+
